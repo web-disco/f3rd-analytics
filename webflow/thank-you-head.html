@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- Paste into Webflow: Page Settings → Custom Code → Head Code (thank-you page only) -->
+<script>
+  (async () => {
+    const API_BASE = 'https://your-project.vercel.app/api/session';
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    const sessionId = params.get('sessionId');
+
+    const typeFallback = { session: 70, membership: 0 };
+    let value = 0;
+    let itemName = '';
+
+    if (type === 'session' && sessionId) {
+      try {
+        const res = await fetch(`${API_BASE}?id=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) throw new Error(`Session lookup failed (${res.status})`);
+
+        const data = await res.json();
+        itemName = data.name || '';
+        value = data.value ?? 0;
+      } catch (e) {
+        console.warn('Momence session lookup failed, falling back to type-based value', e);
+        value = typeFallback[type] || 0;
+      }
+    } else {
+      value = typeFallback[type] || 0;
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'purchase',
+      value,
+      currency: 'CAD',
+      item_name: itemName,
+    });
+
+    if (typeof fbq !== 'undefined') {
+      fbq('track', 'Purchase', {
+        currency: 'CAD',
+        value,
+        content_name: itemName,
+      });
+    }
+  })();
+</script>

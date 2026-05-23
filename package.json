@@ -1,0 +1,7 @@
+{
+  "name": "f3rd-analytics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Momence session lookup proxy for Final 3rd Soccer conversion tracking",
+  "scripts": {}
+}
