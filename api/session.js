@@ -3,29 +3,39 @@ const { mapSessionNameToValue } = require('../lib/price-map');
 
 const ALLOWED_ORIGIN = 'https://www.final3rdsoccer.com';
 
+function isAllowedOrigin(origin) {
+  return origin === ALLOWED_ORIGIN;
+}
+
 function corsHeaders(origin) {
   const headers = {
     'Content-Type': 'application/json',
   };
 
-  if (origin === ALLOWED_ORIGIN) {
-    headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
+  if (isAllowedOrigin(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
     headers['Vary'] = 'Origin';
   }
 
   return headers;
 }
 
+function applyCors(req, res) {
+  const origin = req.headers.origin || '';
+
+  if (isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Vary', 'Origin');
+  }
+}
+
 module.exports = async function handler(req, res) {
   const origin = req.headers.origin || '';
 
   if (req.method === 'OPTIONS') {
-    if (origin === ALLOWED_ORIGIN) {
-      res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
-      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-      res.setHeader('Vary', 'Origin');
-    }
+    applyCors(req, res);
     return res.status(204).end();
   }
 
@@ -54,9 +64,10 @@ module.exports = async function handler(req, res) {
     }
 
     const name = session.name || '';
+    const value = await mapSessionNameToValue(name);
     return res.status(200).json({
       name,
-      value: mapSessionNameToValue(name),
+      value,
       currency: 'CAD',
     });
   } catch (error) {

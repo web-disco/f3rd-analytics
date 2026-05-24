@@ -2,12 +2,14 @@
 <!-- Paste into Webflow: Page Settings → Custom Code → Head Code (thank-you page only) -->
 <script>
   (async () => {
-    const API_BASE = 'https://your-project.vercel.app/api/session';
+    if (window.location.hostname !== 'www.final3rdsoccer.com') return;
+
+    const API_BASE = 'https://f3rd-analytics.vercel.app/api/session';
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type');
     const sessionId = params.get('sessionId');
 
-    const typeFallback = { session: 70, membership: 0 };
+    const typeFallback = { membership: 0 };
     let value = 0;
     let itemName = '';
 

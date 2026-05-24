@@ -85,7 +85,7 @@ POST https://api.momence.com/api/v2/auth/token
 }
 ```
 
-**CORS:** Return `Access-Control-Allow-Origin: https://www.final3rdsoccer.com` so only the F3rd site can call the function.
+**CORS:** Allow `https://www.final3rdsoccer.com` only. Staging (`f3rd.webflow.io`) is excluded — conversion tracking runs on production only.
 
 **Function URL:** Once deployed, the function will be available at `https://your-project.vercel.app/api/session`. Update the `fetch` call in the Webflow code below to use this URL.
 
@@ -177,13 +177,49 @@ In the GTM container (`GTM-5QDWR75C`):
 - ⬜ Momence API client not yet created (needed for `client_id` / `client_secret`)
 - ⬜ Momence tracking URL not yet set to `https://www.final3rdsoccer.com/thank-you`
 
+## Products & Pricing (Webflow CMS)
+
+Pricing is managed in Webflow so the client can add/edit products without touching code.
+
+### CMS Collection: `Conversion Products`
+
+Create a collection in Webflow with these fields:
+
+| Field | Type | Slug | Example | Notes |
+|---|---|---|---|---|
+| Name | Plain text | `name` | High Performance Summer Camp | Display name for the client |
+| Match text | Plain text | `match-text` | Summer Camp | Partial text to match Momence session names |
+| Price | Number | `price` | 325 | Conversion value in CAD |
+| Priority | Number | `priority` | 10 | Higher = checked first (use for specific vs broad matches) |
+| Active | Switch | `active` | On | Turn off without deleting |
+
+**Client workflow:** CMS → Conversion Products → Add/edit row → Publish site.
+
+The Vercel function reads **published (live)** items from this collection and caches them for 5 minutes.
+
+**Match text tips for the client:**
+- Use a unique phrase from the Momence booking name
+- `"Summer Camp"` matches `"High Performance Summer Camp 1"`
+- `"High Performance Training"` matches weekly training sessions
+- More specific match text + higher priority wins when names overlap
+
+### Vercel env vars for Webflow
+
+- `WEBFLOW_API_TOKEN` — Site token with `CMS:read` scope ([Webflow API settings](https://webflow.com/dashboard/account/integrations))
+- `WEBFLOW_COLLECTION_ID` — Collection ID from Webflow CMS settings
+
+If Webflow is not configured, a code fallback list in `lib/price-map.js` is used.
+
+---
+
 ## Products in Scope (Current)
 
-| Product | Momence type param | Price (CAD) |
+| Product | Match text | Price (CAD) |
 |---|---|---|
-| High Performance Soccer Training | `session` | $70 |
-| 20 Session Package | `membership` (TBC) | TBD |
-| Private Training | `session` (TBC) | TBD |
+| High Performance Summer Camp | `Summer Camp` | $325 |
+| High Performance Training | `High Performance Training` | $70 |
+| 20 Session Package | TBC | TBD |
+| Private Training | TBC | TBD |
 
 ## Notes
 
